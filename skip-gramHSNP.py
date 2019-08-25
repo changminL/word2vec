@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import absolutclock deprecatede_import, division, print_function
 
 import numpy as np
 import multiprocessing
@@ -6,13 +6,16 @@ from multiprocessing import Pool, Array, Process, Value, Manager
 import random
 import os
 import unicodedata
+import time
 from io import open
 
 num_threads = multiprocessing.cpu_count()
+start = time.process_time()
 print(num_threads)
-MAX_STRING 100
-NAX_SENTENCE_LENGTH 1000
-MAX_CODE_LENGTH 40
+MAX_STRING = 100
+NAX_SENTENCE_LENGTH = 1000
+MAX_CODE_LENGTH = 40
+
 
 # Turn a Unicode string to plain ASCII
 def unicodeToAscii(s):
@@ -41,6 +44,7 @@ class Voc:
 		self.index2point = {}
 		self.index2codelen = {}
 		self.num_words = 0
+		self.toal_words = 0
 
 	def _init_dict(self, input_file, min_count):
 		sentences = []
@@ -56,6 +60,10 @@ class Voc:
 			sentences.append(sentence)
 
 		self.trim(min_count)
+
+		for k, c in self.word2count.items():
+			self.total_words += c
+
 		return sentences
 
 	def addSentence(self, sentence):
@@ -71,7 +79,7 @@ class Voc:
 			self.num_words += 1
 		else:
 			self.word2count[word] += 1
-			self.index2count[self.num_words] = 1
+			self.index2count[self.word2index[word]] += 1
 
 	# Remove words below a certain count threshold
 	def trim(self, min_count):
@@ -168,6 +176,8 @@ class HuffmanTree:
 		del self.parent
 
 MIN_COUNT = 3
+EPOCH = 5
+debug_mode = True
 # Make a Skip-gram model
 class SkipGram:
 	def __init__(self, vocab, emb_dim):
@@ -187,19 +197,55 @@ class SkipGram:
 		return self.sentences[start:end]
 		
 	def TrainModelThread(self, tid):
-		word_count = last_word_count = sentence_position = 0
+		word_count = last_word_count = sentence_position = sentence_length = 0
+		local_epochs = EPOCH
 		sentences = self.LoadData(tid)
-
+		
 		neu1 = np.zeros(self.embed_dim)
 		neu1e = np.zeros(self.embed_dim)
+		sen = []
+		for epoch in local_epochs:
+			for sentence in sentences:
 
-		while 1:
-			
-			if sample > 0:
-			word = 
-			neu1 = np.zeros(self.embed_dim)
-			neu1e = np.zeros(self.embed_dim)
+				if word_count - last_word_count > 10000:
+					word_count_actual += word_count - last_word_count
+					last_word_count = word_count
+					if debug_mode:
+						now = time.process_time()
+						print("Learning rate: {:f}  Progress: {:.2f}  Words/thread/sec: {:.2f}k  ".format(
+						lr, word_count_actual / (EPOCH * self.vocab.total_words + 1) * 100,
+						word_count_actual / (now - start + 1) / 1e6 * 1000))
 
+					lr = starting_lr * (1 - word_count_actual / (EPOCH * self.vocab.total_words + 1))
+					if (lr < starting_lr * 0.0001): lr = starting_lr * 0.0001
+
+				if sentence_length == 0:
+					for word in sentence:
+						# The subsampling randomly discards frequent words while keeping the ranking same
+						if sample > 0:
+							ran = (np.sqrt(self.vocab.word2count[word] / (sample * self.vocab.total_words)) + 1) *
+							  	(sample * self.vocab.total_words) / self.vocab.word2count[word]
+							if ran < np.random.uniform(0, 1, 1).item():
+								continue
+						sen.append(word)
+						sentence_length += 1
+					sentence_position = 0
+							
+				
+				word = sen[sentence_position]
+				
+				neu1 = np.zeros(self.embed_dim)
+				neu1e = np.zeros(self.embed_dim)
+				b = np.random.randint(0, window, size=1).item()
+				
+				sentence_position += 1
+				if sentence_position >= sentence_length:
+					sentence_length = 0
+					continue
+			word_count_actual += word_count - last_word_count
+			word_count = 0
+			last_word_count = 0
+			sentence_length = 0
 			
 		
 	def TrainModel(self, input_file_name):
@@ -209,7 +255,7 @@ class SkipGram:
 		self.sentences = self.vocab._init_dict(input_file, MIN_COUNT)
 		huffman = HuffmanTree(self.vocab)
 		huffman.build_tree()
-		
+		start = time.process_time()
 		jobs = []
 		t_id = Value('i', 0)
 		for i in range(num_threads):
