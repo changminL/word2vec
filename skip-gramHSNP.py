@@ -14,15 +14,6 @@ MAX_STRING 100
 NAX_SENTENCE_LENGTH 1000
 MAX_CODE_LENGTH 40
 
-
-class Voc_word:
-	def __init__(self):
-		self.count = None
-		self.parent = None
-		self.word = None
-		self.code = None
-		self.code_length = None
-
 class Voc:
 	def __init__(self):
 		self.trimmed = False
@@ -33,6 +24,7 @@ class Voc:
 		# For Huffman encoding
 		self.index2code = {}
 		self.index2point = {}
+		self.index2codelen = {}
 		self.num_words = 0
 
 	def addSentence(self, sentence):
@@ -78,16 +70,16 @@ class Voc:
 			self.addWord(word)
 
 class HuffmanTree:
-	def __init__(self, word_id_frequency_dict):
-		self.vocab_size = len(word_id_frequency_dict)
+	def __init__(self, vocab):
+		self.vocab = vocab
+		self.vocab_size = len(self.vocab.index2count)
 
 		self.count = np.ones(self.vocab_size * 2 + 1) * 1e15
-		for word_id, frequency in word_id_frequency_dict.items():
+		for word_id, frequency in self.vocab.index2count.items():
 			self.count[word_id] = frequency
 
 		self.binary = np.zeros(self.vocab_size * 2 + 1)
 		self.parent = np.zeros(self.vocab_size * 2 + 1)
-		self.point = np.zeros(MAx_CODE_LENGTH)
 
 	def build_tree(self):
 		min1_idx = min2_idx = int()
@@ -120,10 +112,26 @@ class HuffmanTree:
 			self.count[self.vocab_size + i] = self.count[min1_idx] + self.count[min2_idx]
 			self.parent[min1_idx] = self.vocab_size + i
 			self.parent[min2_idx] = self.vocab_size + i
-			binary[min2_idx] = 1
+			self.binary[min2_idx] = 1
+		
 		# Now assign binary code to each vocabulary word
-		for idx in range(self.vocab_size):
-			
+		for w_id in range(self.vocab_size):
+			path_id = w_id
+			code = np.array(list())
+			point = np.array(list())
+			while 1:
+				np.insert(code, 0, binary[path_id])
+				np.insert(point, 0, path_id)
+				path_id = self.parent[path_id]
+				if path_id == (self.vocab_size * 2 - 2):
+					break
+			point = point - self.vocab_size
+			np.insert(point, 0, self.vocab_size - 2)
+			self.vocab.index2codelen[w_id] = len(code)
+			self.vocab.index2point[w_id] = point
+			self.vocab.index2code[w_id] = code
+			del code
+			del point
 		del self.count
 		del self.binary
 		del self.parent
