@@ -30,6 +30,9 @@ class Voc:
 		self.word2count = {}
 		self.index2word = {}
 		self.index2count = {}
+		# For Huffman encoding
+		self.index2code = {}
+		self.index2point = {}
 		self.num_words = 0
 
 	def addSentence(self, sentence):
@@ -78,20 +81,52 @@ class HuffmanTree:
 	def __init__(self, word_id_frequency_dict):
 		self.vocab_size = len(word_id_frequency_dict)
 
-		self.count_list = np.ones(self.vocab_size * 2 + 1) * 1e15
+		self.count = np.ones(self.vocab_size * 2 + 1) * 1e15
 		for word_id, frequency in word_id_frequency_dict.items():
-			self.count_list[word_id] = frequency
+			self.count[word_id] = frequency
 
-		self.binary_list = np.zeros(self.vocab_size * 2 + 1)
+		self.binary = np.zeros(self.vocab_size * 2 + 1)
+		self.parent = np.zeros(self.vocab_size * 2 + 1)
+		self.point = np.zeros(MAx_CODE_LENGTH)
 
 	def build_tree(self):
+		min1_idx = min2_idx = int()
 		pos1 = self.vocab_size - 1
 		pos2 = self.vocab_size
 
 		# Follwoing algorithm constructs the Huffman tree by adding one node at a time
 		for i in range(self.vocab_size):
-			# First, 
-
+			# First, find two smallest nodes 'min1, min2'
+			if pos1 >= 0:
+				if self.count[pos1] < self.count[pos2]:
+					min1_idx = pos1
+					pos1 -= 1
+				else:
+					min1_idx = pos2
+					pos2 += 1
+			else:
+				min1_idx = pos2
+				pos2 += 1
+			if pos1 >= 0:
+				if self.count[pos1] < self.count[pos2]:
+					min2_idx = pos1
+					pos1 -= 1
+				else:
+					min2_idx = pos2
+					pos2 += 1
+			else:
+				min2_idx = pos2
+				pos2++
+			self.count[self.vocab_size + i] = self.count[min1_idx] + self.count[min2_idx]
+			self.parent[min1_idx] = self.vocab_size + i
+			self.parent[min2_idx] = self.vocab_size + i
+			binary[min2_idx] = 1
+		# Now assign binary code to each vocabulary word
+		for idx in range(self.vocab_size):
+			
+		del self.count
+		del self.binary
+		del self.parent
 # Make a Skip-gram model
 class SkipGram:
 	def __init__(self, vocab_size, emb_dim):
