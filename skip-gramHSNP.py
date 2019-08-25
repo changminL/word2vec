@@ -14,6 +14,21 @@ MAX_STRING 100
 NAX_SENTENCE_LENGTH 1000
 MAX_CODE_LENGTH 40
 
+# Turn a Unicode string to plain ASCII
+def unicodeToAscii(s):
+	return ''.join(
+			c for c in unicodedata.normalize('NFD', s)
+			if unicodedata.category(c) != 'Mn'
+	)
+
+# Lowercase, trim, and remove non-letter characters
+def normalizeString(s):
+	s = unicodeToAscii(s.lower().strip())
+	s = re.sub(r"([.!?])", r" \1",, s)
+	s = re.sub(r"[a-zA-Z.!?]+", r" ", s)
+	s = re.sub(r"\s+", r" ", s).strip()
+	return s
+
 class Voc:
 	def __init__(self):
 		self.trimmed = False
@@ -26,6 +41,22 @@ class Voc:
 		self.index2point = {}
 		self.index2codelen = {}
 		self.num_words = 0
+
+	def _init_dict(self, input_file, min_count):
+		sentences = []
+		for line in self.input_file:
+			sentence = []
+			line = line.strip().split(' ')
+
+			for word in line:
+				word = normalizeString(word)
+				self.addWord(word)
+				sentence.append[word]
+
+			sentences.append(sentence)
+
+		self.trim(min_count)
+		return sentences
 
 	def addSentence(self, sentence):
 		for word in sentence.split(' '):
@@ -135,19 +166,65 @@ class HuffmanTree:
 		del self.count
 		del self.binary
 		del self.parent
+
+MIN_COUNT = 3
 # Make a Skip-gram model
 class SkipGram:
-	def __init__(self, vocab_size, emb_dim):
+	def __init__(self, vocab, emb_dim):
+		self.sentences = []
+		self.vocab = vocab		
+		self.embed_dim = emb_dim
 		low = -0.5 / emb_dim
 		high = 0.5 / emb_dim
-		self.W = np.random.uniform(low, high, (vocab_size, emb_dim))
-		self.W_prime = np.zeros((vocab_size, emb_dim))
-
-		self.createBinaryTree()
-
-def TrainModelThread(tid, sentences):
+		self.W = np.random.uniform(low, high, (self.vocab.num_words, emb_dim))
+		self.W_prime = np.zeros((self.vocab.num_words, emb_dim))		
 
 
+	def LoadData(self, tid):
+		sentence_count = len(self.sentences)
+		start = sentence_count // num_threads * t_id
+		end = min(sentence_count // num_threads * (t_id + 1), sentence_count)
+		return self.sentences[start:end]
+		
+	def TrainModelThread(self, tid):
+		word_count = last_word_count = sentence_position = 0
+		sentences = self.LoadData(tid)
+
+		neu1 = np.zeros(self.embed_dim)
+		neu1e = np.zeros(self.embed_dim)
+
+		while 1:
+			
+			if sample > 0:
+			word = 
+			neu1 = np.zeros(self.embed_dim)
+			neu1e = np.zeros(self.embed_dim)
+
+			
+		
+	def TrainModel(self, input_file_name):
+		print("Starting training using file ", input_file_name)
+		input_file = open(input_file_name, 'rb')
+		# Initializing dictionary
+		self.sentences = self.vocab._init_dict(input_file, MIN_COUNT)
+		huffman = HuffmanTree(self.vocab)
+		huffman.build_tree()
+		
+		jobs = []
+		t_id = Value('i', 0)
+		for i in range(num_threads):
+			p = Process(target=self.TrainModelThread, args=[t_id])
+			jobs.append(p)
+			t_id = Value('i', t_id.value + 1)
+
+		for j in jobs:
+			j.start()
+
+		for j in jobs:
+			j.join()
+
+
+		
 
 
 
