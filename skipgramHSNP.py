@@ -241,7 +241,6 @@ class SkipGram:
         
         sentences = self.sentences[start:end]
         
-        neu1 = np.zeros(self.embed_dim)
         neu1e = np.zeros(self.embed_dim)
         sen = []
         eof = False
@@ -389,8 +388,8 @@ class SkipGram:
         for j in jobs:
             j.join()
 
-        self.W = W
-        self.W_prime = W_prime
+        self.W = np.array(W[:]).reshape(self.vocab.num_words, self.embed_dim)
+        self.W_prime = np.array(W_prime[:]).reshape(self.vocab.num_words, self.embed_dim)
         self.SaveEmbedding(output_file_name)
 
 
@@ -399,16 +398,4 @@ output_file_name = 'embedding.txt'
 read_file = open(input_file_name, 'r')
 voc = Voc()
 skip = SkipGram(voc, 100)
-skip.TrainModel(input_file_name, output_file_name)
-#voc._init_dict(ff, 3)
-#print(voc.num_words)
-#print(voc.total_words)
-#huff = HuffmanTree(voc)
-#huff.build_tree()
-#print(voc.word2index)
-#print(voc.word2count)
-# skip = SkipGram(voc, 100)
-# skip.TrainModel(input_file_name, output_file_name)
-
-
-			
+skip.TrainModel(input_file_name, output_file_name)			
