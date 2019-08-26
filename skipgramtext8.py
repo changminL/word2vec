@@ -1,3 +1,5 @@
+from __future__ import absolutclock deprecatede_import, division, print_function
+
 import numpy as np
 import multiprocessing
 from multiprocessing import Pool, Array, Process, Value, Manager
@@ -29,7 +31,7 @@ def unicodeToAscii(s):
 # Lowercase, trim, and remove non-letter characters
 def normalizeString(s):
 	s = unicodeToAscii(s.lower().strip())
-	s = re.sub(r"([.!?])", r" \1", s)
+	s = re.sub(r"([.!?])", r" \1",, s)
 	s = re.sub(r"[a-zA-Z.!?]+", r" ", s)
 	s = re.sub(r"\s+", r" ", s).strip()
 	return s
@@ -49,7 +51,6 @@ class Voc:
 		self.toal_words = 0
 
 	def _init_dict(self, input_file, min_count):
-		"""
 		sentences = []
 		for line in self.input_file:
 			sentence = []
@@ -61,15 +62,7 @@ class Voc:
 				sentence.append[word]
 
 			sentences.append(sentence)
-		"""
-		# Customize for text8 data
-		sentences = []
-		line = input_file.read()
-		line = line.strip().split(' ')
-		for word in line:
-			word = normalizeString(word)
-			self.addWord(word)
-			sentences.append(word)
+
 		self.trim(min_count)
 
 		for k, c in self.word2count.items():
@@ -158,7 +151,7 @@ class HuffmanTree:
 					pos2 += 1
 			else:
 				min2_idx = pos2
-				pos2 += 1
+				pos2++
 			self.count[self.vocab_size + i] = self.count[min1_idx] + self.count[min2_idx]
 			self.parent[min1_idx] = self.vocab_size + i
 			self.parent[min2_idx] = self.vocab_size + i
@@ -255,9 +248,11 @@ class SkipGram:
 					  	for word in sentence:
 					  		word_count += 1
 					  		if sample > 0:
-					  			ran = (np.sqrt(self.vocab.word2count[word] / (sample * self.vocab.total_words)) + 1) * (sample * self.vocab.total_words) / self.vocab.word2count[word]
-					  			if ran < np.random.uniform(0, 1, 1).item():
+								ran = (np.sqrt(self.vocab.word2count[word] / (sample * self.vocab.total_words)) + 1) *
+									  (sample * self.vocab.total_words) / self.vocab.word2count[word]
+								if ran < np.random.uniform(0, 1, 1).item():
 									continue
+
 							sen.append(self.vocab.word2index(word))
 							sentence_length += 1
 						sentence_position = 0
@@ -285,7 +280,7 @@ class SkipGram:
 								f += np.dot(W[l1], W_prime[l2])
 								if f <= -MAX_EXP: 
 									continue
-								elif f >= MAX_EXP: 
+								else if f >= MAX_EXP: 
 									continue
 								else:
 									f = sigmoid(f)
@@ -339,9 +334,8 @@ class SkipGram:
 
 input_file_name='/home/changmin/research/MMI/data/text8'
 output_file_name='embedding.txt'
-ff = open(input_file_name, 'r')
 voc = Voc()
-voc._init_dict(ff, 3)
+voc._init_dict(input_file_name, 3)
 print(self.voc.num_words)
 print(slef.voc.word2index)
 #skip = SkipGram(voc, 100)

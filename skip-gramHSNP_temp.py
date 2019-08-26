@@ -1,3 +1,5 @@
+from __future__ import absolutclock deprecatede_import, division, print_function
+
 import numpy as np
 import multiprocessing
 from multiprocessing import Pool, Array, Process, Value, Manager
@@ -9,13 +11,9 @@ from io import open
 
 num_threads = multiprocessing.cpu_count()
 start = time.process_time()
-starting_lr = 1e-3
-sample = 1e-3
-word_count_actual = 0
-lr = 0.025
 print(num_threads)
 MAX_STRING = 100
-MAX_SENTENCE_LENGTH = 1000
+NAX_SENTENCE_LENGTH = 1000
 MAX_CODE_LENGTH = 40
 
 
@@ -29,7 +27,7 @@ def unicodeToAscii(s):
 # Lowercase, trim, and remove non-letter characters
 def normalizeString(s):
 	s = unicodeToAscii(s.lower().strip())
-	s = re.sub(r"([.!?])", r" \1", s)
+	s = re.sub(r"([.!?])", r" \1",, s)
 	s = re.sub(r"[a-zA-Z.!?]+", r" ", s)
 	s = re.sub(r"\s+", r" ", s).strip()
 	return s
@@ -49,7 +47,6 @@ class Voc:
 		self.toal_words = 0
 
 	def _init_dict(self, input_file, min_count):
-		"""
 		sentences = []
 		for line in self.input_file:
 			sentence = []
@@ -61,15 +58,7 @@ class Voc:
 				sentence.append[word]
 
 			sentences.append(sentence)
-		"""
-		# Customize for text8 data
-		sentences = []
-		line = input_file.read()
-		line = line.strip().split(' ')
-		for word in line:
-			word = normalizeString(word)
-			self.addWord(word)
-			sentences.append(word)
+
 		self.trim(min_count)
 
 		for k, c in self.word2count.items():
@@ -158,7 +147,7 @@ class HuffmanTree:
 					pos2 += 1
 			else:
 				min2_idx = pos2
-				pos2 += 1
+				pos2++
 			self.count[self.vocab_size + i] = self.count[min1_idx] + self.count[min2_idx]
 			self.parent[min1_idx] = self.vocab_size + i
 			self.parent[min2_idx] = self.vocab_size + i
@@ -187,17 +176,9 @@ class HuffmanTree:
 		del self.parent
 
 MIN_COUNT = 3
-MAX_EXP = 6
 EPOCH = 5
 WINDOW = 5
 debug_mode = True
-
-def sigmoid(x, derivative=False):
-	sigm = 1. / (1. + np.exp(-x))
-	if derivative:
-		return sigm * (1. - sigm)
-	return sigm
-
 # Make a Skip-gram model
 class SkipGram:
 	def __init__(self, vocab, emb_dim):
@@ -212,105 +193,63 @@ class SkipGram:
 
 	def LoadData(self, tid):
 		sentence_count = len(self.sentences)
-		start = sentence_count // num_threads * tid
-		end = min(sentence_count // num_threads * (tid + 1), sentence_count)
+		start = sentence_count // num_threads * t_id
+		end = min(sentence_count // num_threads * (t_id + 1), sentence_count)
 		return self.sentences[start:end]
-
-	def Save_Embedding(self, file_name):
-		embedding = self.W
-		fout = open(file_name, 'w')
-		fout.write('%d %d\n' %(len(self.vocab.index2word), self.embed_dim))
-		for w_id, w in self.vocab.index2word.items():
-			e = embedding[w_id]
-			e = ' '.join(map(lambda x: str(x), e))
-			fout.write('%s %s\n' % (w, e))
 		
-	def TrainModelThread(self, tid, lr, word_count_actual, W, W_prime):
+	def TrainModelThread(self, tid):
 		word_count = last_word_count = sentence_position = sentence_length = 0
 		local_epochs = EPOCH
-		sentences = self.LoadData(tid.value)
+		sentences = self.LoadData(tid)
 		
 		neu1 = np.zeros(self.embed_dim)
 		neu1e = np.zeros(self.embed_dim)
 		sen = []
 		for epoch in local_epochs:
-			
 			for sentence in sentences:
-				sentence_position = 0
-				sentence_length = 0
-				sen = []
-				while 1:
-					if word_count - last_word_count > 10000:
-						word_count_actual.value = word_count_actual.value + word_count - last_word_count
-						last_word_count = word_count
-						if debug_mode:
-							now = time.process_time()
-							print("Learning rate: {:f}   Progress: {:.2f}   Words/thread/sec: {:.2f}k   ".format(lr,
-								  word_count_actual.value / (EPOCH * self.vocab.total_words + 1) * 100,
-								  word_count_actual.value / (now - start + 1) / 1e6 * 1000))
-						lr.value = starting_lr * (1 - word_count_actual.value / (EPOCH * self.vocab.total_words + 1))
-						if (lr.value < starting_lr * 0.0001):
-							lr.value = starting_lr * 0.0001
-					if sentence_length == 0:
-					  	for word in sentence:
-					  		word_count += 1
-					  		if sample > 0:
-					  			ran = (np.sqrt(self.vocab.word2count[word] / (sample * self.vocab.total_words)) + 1) * (sample * self.vocab.total_words) / self.vocab.word2count[word]
-					  			if ran < np.random.uniform(0, 1, 1).item():
-									continue
-							sen.append(self.vocab.word2index(word))
-							sentence_length += 1
-						sentence_position = 0
 
-					word_idx = sen[sentence_position]
+				if word_count - last_word_count > 10000:
+					word_count_actual += word_count - last_word_count
+					last_word_count = word_count
+					if debug_mode:
+						now = time.process_time()
+						print("Learning rate: {:f}  Progress: {:.2f}  Words/thread/sec: {:.2f}k  ".format(
+						lr, word_count_actual / (EPOCH * self.vocab.total_words + 1) * 100,
+						word_count_actual / (now - start + 1) / 1e6 * 1000))
 
-					neu1 = np.zeros(self.embed_dim)
-					neu1e = np.zeros(self.embed_dim)
+					lr = starting_lr * (1 - word_count_actual / (EPOCH * self.vocab.total_words + 1))
+					if (lr < starting_lr * 0.0001): lr = starting_lr * 0.0001
+
+				if sentence_length == 0:
+					for word in sentence:
+						# The subsampling randomly discards frequent words while keeping the ranking same
+						if sample > 0:
+							ran = (np.sqrt(self.vocab.word2count[word] / (sample * self.vocab.total_words)) + 1) *
+							  	(sample * self.vocab.total_words) / self.vocab.word2count[word]
+							if ran < np.random.uniform(0, 1, 1).item():
+								continue
+						sen.append(word)
+						sentence_length += 1
+					sentence_position = 0
+							
 				
-					b = np.random.randint(WINDOW, size=1).item()
-					for a in range(b, WINDOW*2 + 1 - b, 1):
-						if a != WINDOW:
-							last_pos = sentence_position - WINDOW + a
-							if last_pos < 0: continue
-							if last_pos >= sentence_length: continue
-							last_word_idx = sen[last_pos]
-							l1 = last_word_idx
-							neu1e = np.zeros(self.embed_dim)
-							
-							# Hierarchical Softmax
-							for d in range(self.vocab.index2codelen[word_idx]):
-								f = 0
-								l2 = self.vocab.index2point[word_idx]
-								# Propagate hidden -> output
-								f += np.dot(W[l1], W_prime[l2])
-								if f <= -MAX_EXP: 
-									continue
-								elif f >= MAX_EXP: 
-									continue
-								else:
-									f = sigmoid(f)
-								# 'g' is the gradient multiplied by the learning rate
-								gradient = (1 - self.vocab.index2code[word_idx][d] - f) * lr.value						
-								# Propagate errors output -> hidden
-								neu1e += gradient * W_prime[l2]
-								# Learn weights hidden -> output
-								W_prime[l2] += gradient * W[l1]
-
-							# Learn weights input -> hidden	
-							W[l1] += neu1e
-					sentence_position += 1
-
-					if sentence_position >= sentence_length:
-						break
-							
-				 		
-			word_count_actual.value = word_count_actual.value + word_count - last_word_count
+				word = sen[sentence_position]
+				
+				neu1 = np.zeros(self.embed_dim)
+				neu1e = np.zeros(self.embed_dim)
+				b = np.random.randint(WINDOW, size=1).item()
+				for 		
+				sentence_position += 1
+				if sentence_position >= sentence_length:
+					sentence_length = 0
+					continue
+			word_count_actual += word_count - last_word_count
 			word_count = 0
 			last_word_count = 0
 			sentence_length = 0
 			
 		
-	def TrainModel(self, input_file_name, output_file_name):
+	def TrainModel(self, input_file_name):
 		print("Starting training using file ", input_file_name)
 		input_file = open(input_file_name, 'rb')
 		# Initializing dictionary
@@ -320,14 +259,10 @@ class SkipGram:
 		start = time.process_time()
 		jobs = []
 		t_id = Value('i', 0)
-		word_count_actual = Value('i', 0)
-		lr = Value('d', 0.025)
-		W = Array('d', self.W)
-		W_prime = Array('f', self.W_prime)
 		for i in range(num_threads):
-			p = Process(target=self.TrainModelThread, args=[t_id, lr, word_count_actual, W, W_prime])
+			p = Process(target=self.TrainModelThread, args=[t_id])
 			jobs.append(p)
-			t_id.value = t_id.value + 1
+			t_id = Value('i', t_id.value + 1)
 
 		for j in jobs:
 			j.start()
@@ -335,15 +270,12 @@ class SkipGram:
 		for j in jobs:
 			j.join()
 
-		self.SaveEmbedding(output_file_name)
 
-input_file_name='/home/changmin/research/MMI/data/text8'
-output_file_name='embedding.txt'
-ff = open(input_file_name, 'r')
-voc = Voc()
-voc._init_dict(ff, 3)
-print(self.voc.num_words)
-print(slef.voc.word2index)
-#skip = SkipGram(voc, 100)
-#skip.TrainModel(input_file_name, output_file_name)
+		
 
+
+
+
+skip = SkipGram(5, 2)
+print(skip.W)
+print(skip.W_prime)
