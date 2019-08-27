@@ -17,11 +17,11 @@ negative = 5
 lr = 0.025
 print(num_threads)
 MAX_STRING = 100
-MAX_SENTENCE_LENGTH = 10
+MAX_SENTENCE_LENGTH = 50
 MAX_CODE_LENGTH = 40
 
 def sigmoid(x, derivative=False):
-    sigm = 1.  (1. + np.exp(-x))
+    sigm = 1. / (1. + np.exp(-x))
     if derivative:
         return sigm * (1. - sigm)
     return sigm
@@ -63,7 +63,7 @@ class Voc:
             self.word2index[word] = self.num_words
             self.word2count[word] = 1
             self.index2word[self.num_words] = word
-            self.index2count[self.num_words] 1
+            self.index2count[self.num_words] = 1
             self.num_words += 1
         else:
             self.word2count[word] += 1
@@ -76,13 +76,14 @@ class Voc:
             return
         self.trimmed = True
         q = queue.PriorityQueue()
-   
+        keep_words = 0 
         for (k, v) in self.word2count.items():
             if v >= min_count:
+                keep_words += v
                 q.put((-v, k))
 
-        print('keep_words {} / {} = {:.4f}'.format(len(keep_words), \
-               len(self.word2index), len(keep_words)
+        print('keep_words {} / {} = {:.4f}'.format(keep_words, \
+               len(self.word2index), keep_words
                / len(self.word2index)))
 
         # Reinitialize dictionaires
@@ -119,12 +120,12 @@ class SkipGram:
     def InitUnigramTable(self):
         train_words_pow = 0
         d1 = power = 0.75
-        self.table = np.zeros(table_size)
+        self.table = np.zeros(int(table_size))
         for count in self.vocab.index2count.values():
             train_words_pow += np.power(count, power)
         i = 0
         d1 = np.power(self.vocab.index2count[i], power) / train_words_pow
-        for a in range(table_size):
+        for a in range(int(table_size)):
             self.table[a] = i
             if (a / table_size) > d1:
                 i += 1
@@ -235,9 +236,10 @@ class SkipGram:
                                 target = word_idx
                                 label = 1
                             else:
-                                target = np.random.randint(table_size, size=1).item()
+                                ran = np.random.randint(int(table_size), size=1).item()
+                                target = int(self.table[ran])
                                 if target == 0:
-                                    target = np.random.randint(WINDOW
+                                    target = np.random.randint(self.vocab.num_words, size=1).item()
                                 if target == word_idx:
                                     continue        
                                 label = 0        
@@ -273,12 +275,14 @@ class SkipGram:
 
         word_count_actual = 0
         low = -0.5 / self.embed_dim
-        high = -.5 / self.embed_dim
+        high = 0.5 / self.embed_dim
         self.W = np.random.uniform(low, high, (self.vocab.num_words, self.embed_dim))
         self.W_prime = np.zeros((self.vocab.num_words, self.embed_dim))
 
         start = time.process_time()
         jobs = []
+
+        t_id = 0
         word_count_actual = Value('i', 0)
         lr = Value('d', 0.025)
         W = Array('d', self.W.reshape(-1))
@@ -295,9 +299,9 @@ class SkipGram:
         for j in jobs:
             j.join()
 
-         self.W = np.array(W[:]).reshape(self.vocab.num_words, self.embed_dim)
-         self.W_prime = np.array(W_prime[:]).reshape(self.vocab.num_words, self.embed_dim)
-         self.SaveEmbedding(output_file_name)
+        self.W = np.array(W[:]).reshape(self.vocab.num_words, self.embed_dim)
+        self.W_prime = np.array(W_prime[:]).reshape(self.vocab.num_words, self.embed_dim)
+        self.SaveEmbedding(output_file_name)
 
 input_file_name = '/home/changmin/research/MMI/data/text8'
 output_file_name = 'embeddingNS.txt'
