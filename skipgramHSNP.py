@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 import numpy as np
 import multiprocessing
 from multiprocessing import Pool, Array, Process, Value, Manager
@@ -44,20 +42,6 @@ class Voc:
         self.total_words = 0
 
     def _init_dict(self, input_file, min_count):
-        """
-        sentences = []
-        for line in self.input_file:
-            sentence = []
-            line = line.strip().split(' ')
-
-            for word in line:
-                word = normalizeString(word)
-                self.addWord(word)
-                sentence.append[word]
-
-            sentences.append(sentence)
-        """
-
         # Customize for text8 data
 
         sentences = []
@@ -65,7 +49,7 @@ class Voc:
         line = line.strip().split(" ")
         for word in line:
             #word = normalizeString(word)
-            self.addWord(word)
+            self.add_word(word)
             sentences.append(word)
         self.trim(min_count)
 
@@ -74,11 +58,7 @@ class Voc:
 
         return sentences
 
-    def addSentence(self, sentence):
-        for word in sentence.split(" "):
-            self.addWord(word)
-
-    def addWord(self, word):
+    def add_word(self, word):
         if word not in self.word2index:
             self.word2index[word] = self.num_words
             self.word2count[word] = 1
@@ -116,7 +96,7 @@ class Voc:
         self.num_words = 0
 
         for word in keep_words:
-            self.addWord(word)
+            self.add_word(word)
 
 
 class HuffmanTree:
@@ -211,14 +191,7 @@ class SkipGram:
         self.W = None
         self.W_prime = None
 
-    def LoadData(self, tid):
-        sentence_count = len(self.sentences)
-        start = sentence_count // num_threads * tid
-        end = min(sentence_count // num_threads * (tid + 1),
-                  sentence_count)
-        return self.sentences[start:end]
-
-    def SaveEmbedding(self, file_name):
+    def save_embedding(self, file_name):
         embedding = self.W
         fout = open(file_name, 'w')
         fout.write('%d %d\n' % (len(self.vocab.index2word),
@@ -228,7 +201,7 @@ class SkipGram:
             e = " ".join(map(lambda x: str(x), e))
             fout.write('%s %s\n' % (w, e))
 
-    def TrainModelThread(self, tid, lr, word_count_actual, W, W_prime):
+    def train_model_thread(self, tid, lr, word_count_actual, W, W_prime):
         word_count = last_word_count = sentence_position = \
             sentence_length = 0
         local_epochs = EPOCH
@@ -245,7 +218,6 @@ class SkipGram:
         sen = []
         eof = False
         for epoch in range(local_epochs):
-            print("Start epoch: ", epoch)
             word_pos = 0
             while 1:
                 if word_count - last_word_count > 10000:
@@ -293,6 +265,7 @@ class SkipGram:
                     last_word_count = 0
                     sentence_length = 0
                     word_pos = 0
+                    eof = False
                     break
                 word_idx = sen[sentence_position]
                 neu1 = np.zeros(self.embed_dim)
@@ -353,7 +326,7 @@ class SkipGram:
                     sentence_length = 0
                     continue
 
-    def TrainModel(self, input_file_name, output_file_name):
+    def train_model(self, input_file_name, output_file_name):
         print ('Starting training using file ', input_file_name)
         input_file = open(input_file_name, 'r')
 
@@ -367,7 +340,6 @@ class SkipGram:
         high = 0.5 / self.embed_dim
         self.W = np.random.uniform(low, high, (self.vocab.num_words, self.embed_dim))
         self.W_prime = np.zeros((self.vocab.num_words, self.embed_dim))
-        #self.TrainModelThread(0, 0.025, word_count_actual, self.W, self.W_prime)
         
         start = time.process_time()
         jobs = []
@@ -377,7 +349,7 @@ class SkipGram:
         W = Array('d', self.W.reshape(-1))
         W_prime = Array('d', self.W_prime.reshape(-1))
         for i in range(num_threads):
-            p = Process(target=self.TrainModelThread, args=[t_id, lr,
+            p = Process(target=self.train_model_thread, args=[t_id, lr,
                         word_count_actual, W, W_prime])
             jobs.append(p)
             t_id += 1
@@ -390,7 +362,7 @@ class SkipGram:
 
         self.W = np.array(W[:]).reshape(self.vocab.num_words, self.embed_dim)
         self.W_prime = np.array(W_prime[:]).reshape(self.vocab.num_words, self.embed_dim)
-        self.SaveEmbedding(output_file_name)
+        self.save_embedding(output_file_name)
 
 
 input_file_name = '/home/changmin/research/MMI/data/text8'
@@ -398,4 +370,4 @@ output_file_name = 'embedding.txt'
 read_file = open(input_file_name, 'r')
 voc = Voc()
 skip = SkipGram(voc, 100)
-skip.TrainModel(input_file_name, output_file_name)			
+skip.train_model(input_file_name, output_file_name)			
