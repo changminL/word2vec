@@ -10,7 +10,7 @@ import pdb
 
 num_threads = multiprocessing.cpu_count()
 start = 0
-starting_lr = 1e-3
+starting_lr = 0.025
 sample = 1e-5
 word_count_actual = 0
 negative = 15
@@ -32,11 +32,11 @@ class Voc:
         self.num_words = 0
         self.total_words = 0
 
-    def _init_dict(self, sentences, min_count):
+    def _init_dict(self, sentences, min_count, max_count):
         for line in sentences:
             self.add_sentence(line)
         
-        self.trim(min_count)
+        self.trim(min_count, max_count)
 
         for (k, c) in self.word2count.items():
             self.total_words += c
@@ -58,7 +58,7 @@ class Voc:
 
     # Remove words below a certain count threshold
 
-    def trim(self, min_count):
+    def trim(self, min_count, max_count):
         if self.trimmed:
             return
         self.trimmed = True
@@ -83,11 +83,12 @@ class Voc:
      
         while not q.empty():
             freq, word = q.get()
-            if freq < 100000:
+            if freq < max_count:
                 for _ in range(freq):
                     self.add_word(word)
 
-MIN_COUNT = 0
+MIN_COUNT = 3
+MAX_COUNT = 100000
 MAX_EXP = 6
 EPOCH = 3
 WINDOW = 6
@@ -123,11 +124,7 @@ class SkipGram:
             fout.write('%s %s\n' % (w, e))
 
     def forward(self, index1, index2, W, W_prime):
-        start_idx1 = index1 * self.embed_dim 
-        end_idx1 = (index1 + 1) * self.embed_dim
-        start_idx2 = index2 * self.embed_dim
-        end_idx2 = (index2 + 1) * self.embed_dim
-        f = np.dot(W[start_idx1:end_idx1], W_prime[start_idx2:end_idx2])
+        f = np.dot(W[index1], W_prime[index2])
         return f
 
     def backward(self, ff, label):
@@ -144,12 +141,10 @@ class SkipGram:
         center_grad_sum = np.zeros(self.embed_dim)
         for grad, center_i, context_i in gradients:
             center_id = center_i
-            center_grad_sum += grad * np.array(W_prime[context_i*self.embed_dim:(context_i+1)*self.embed_dim])
-            W_prime[context_i*self.embed_dim:(context_i+1)*self.embed_dim] += lr * \
-                grad * np.array(W[center_i*self.embed_dim:(center_i+1)*self.embed_dim])
-        W[center_id*self.embed_dim:(center_id+1)*self.embed_dim] += center_grad_sum
+            center_grad_sum += grad * np.array(W_prime[context_i])
+            W_prime[context_i] += lr * grad * np.array(W[center_i])
+        W[center_id] += center_grad_sum
             
-
     def subsampling(self, sample_bound, sentence):
         w_cnt = 0
         ret = []
@@ -168,81 +163,15 @@ class SkipGram:
             w_cnt += 1
 
         return ret, w_cnt
-        
-    def train_model_thread(self, tid, lr, word_count_actual, W, W_prime):
-        w_count = prev_w_count = 0
-        np.random.seed(tid)
-        sentence_count = len(self.sentences)
-        
-        start_idx = (sentence_count // num_threads) * tid
-        end_idx = min((sentence_count // num_threads) * (tid + 1), sentence_count)
-
-        sentences = self.sentences[start_idx:end_idx]
-
-        for epoch in range(EPOCH):
-            for sentence in sentences:
-                if w_count - prev_w_count > 10000:
-                    word_count_actual.value = word_count_actual.value + w_count - prev_w_count
-                    prev_w_count = w_count
-                    if debug_mode:
-                        now = time.clock()
-                        print('Learning rate: {:f} Progress: {:.2f} Words/thread/sec: {:.2f}k '.format(lr.value,
-                            word_count_actual.value / (EPOCH
-                            * self.vocab.total_words + 1)
-                            * 100, word_count_actual.value
-                            / (now - start + 1) / 1000 ))
-                    lr.value = starting_lr * (1 - word_count_actual.value / (EPOCH
-                            * self.vocab.total_words + 1))
-                    if lr.value < starting_lr * 0.0001:
-                        lr.value = starting_lr * 0.0001
-
-                line, w_cnt = self.subsampling(sample, sentence)
-                w_count += w_cnt
-
-                update_temp = np.zeros(self.embed_dim)
-                line_pos = 0
-            
-                for word_idx in line:
-                    soft_slide = np.random.randint(WINDOW, size=1).item()
-                    for center_idx in line[max(line_pos - WINDOW + soft_slide, 0):line_pos + WINDOW + 1 - soft_slide]:
-                           if center_idx == word_idx:
-                               continue
-                           if self.vocab.index2count.get(center_idx) is None:
-                               continue
-                           center_idx = int(center_idx)
-
-                           gradients = []
-                           for neg_sample in range(negative+1):
-                               if neg_sample == 0:
-                                   context_idx = word_idx
-                                   label = 1
-                               else:
-                                   rand = np.random.randint(int(len(self.table)), size=1).item()
-                                   context_idx = int(self.table[rand])
-                                   if context_idx == 0:
-                                       context_idx = np.random.randint(self.vocab.num_words, size=1).item()
-                                   if context_idx == word_idx:
-                                       continue
-                                   label = 0
-                               ff = self.forward(center_idx, context_idx, W, W_prime)
-                               gradients.append((self.backward(ff, label), center_idx, context_idx))
-
-                           self.optimize(lr.value, gradients, W, W_prime)
-
-                           
-                    line_pos += 1                      
-                                       
-                 
-        
-
-        
-    def train_model(self, input_file_name, output_file_name):
+                             
+    def train(self, input_file_name, output_file_name, lr):
         print('Starting training using file ', input_file_name)
+        pdb.set_trace()
         input_file = open(input_file_name, 'r')
         # Read sentences from a input file
         self.sentences = input_file.readlines()
         # Initialize a vocabulary with a training corpus
-        self.vocab._init_dict(self.sentences, MIN_COUNT)
+        self.vocab._init_dict(self.sentences, MIN_COUNT, MAX_COUNT)
         # Also construct the unigram language model
         self.init_unigram_table()
 
@@ -252,33 +181,49 @@ class SkipGram:
         high = 0.5 / self.embed_dim
         self.W = np.random.uniform(low, high, (self.vocab.num_words, self.embed_dim))
         self.W_prime = np.zeros((self.vocab.num_words, self.embed_dim))
+        
+        w_count = prev_w_count = 0
 
-        start = time.clock()
-        jobs = []
- 
-        t_id = 0
-        word_count_actual = Value('i', 0)
-        lr = Value('d', 0.025)
-        W = Array('d', self.W.reshape(-1))
-        W_prime = Array('d', self.W_prime.reshape(-1))
-        for i in range(num_threads):
-            p = Process(target=self.train_model_thread, args=[t_id, lr,
-                        word_count_actual, W, W_prime])
-            jobs.append(p)
-            t_id += 1
+        for epoch in range(EPOCH):
+            for sentence in self.sentences:
+                line, w_cnt = self.subsampling(sample, sentence)
+                w_count += w_cnt
 
-        for j in jobs:
-            j.start()
- 
-        for j in jobs:
-            j.join()
+                line_pos = 0
 
-        self.W = np.array(W[:]).reshape(self.vocab.num_words, self.embed_dim)
-        self.W_prime = np.array(W_prime[:]).reshape(self.vocab.num_words, self.embed_dim)
+                for word_idx in line:
+                    soft_slide = np.random.randint(WINDOW, size=1).item()
+                    for center_idx in line[max(line_pos - WINDOW + soft_slide,0):line_pos + WINDOW + 1 - soft_slide]:
+                        if self.vocab.index2count.get(center_idx) is None:
+                            continue
+                        if center_idx == word_idx:
+                            continue
+                        center_idx = int(center_idx)
+
+                        gradients = []
+                        for neg_sample in range(negative+1):
+                            if neg_sample == 0:
+                                context_idx = word_idx
+                                label = 1
+                            else:
+                                rand = np.random.randint(int(len(self.table)), size=1).item()
+                                context_idx = int(self.table[rand])
+                                if context_idx == 0:
+                                    context_idx = np.random.randint(self.vocab.num_words, size=1).item()
+                                if context_idx == word_idx:
+                                    continue
+                                label = 0
+                            ff = self.forward(center_idx, context_idx, self.W, self.W_prime)
+                            gradients.append((self.backward(ff, label), center_idx, context_idx))
+
+                        self.optimize(lr, gradients, self.W, self.W_prime)
+
+                    line_pos += 1
+
         self.save_embedding(output_file_name)
 
 input_file_name = '/home/changmin/project/word2vec/wiki_0001.txt'
 output_file_name = 'embedding_results.txt'
 voc = Voc()
 skip = SkipGram(voc, 100)
-skip.train_model(input_file_name, output_file_name)
+skip.train(input_file_name, output_file_name, 0.025)
