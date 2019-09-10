@@ -125,7 +125,7 @@ $$ -\log \sigma(w{'}^{T}_{c-m+j} \cdot w_{c}) - \sum_{k=1}^{K} \log \sigma(-w{'}
 
 For CBOW, our new objective function for observing the center word $w{'}_{c}$ given the context vector $\tilde{w} = \frac{w_{c-m}+w_{c-m+1}+...+w_{c+m}}{2m}$ would be 
 
-$$ -\log \sigma(w{'}_{c}^{T} \cdot \tilde{w}) - \sum_{k=1}^{K} \log \sigma(-\tilde{w{'}}^{T}_{k} \cdot \tilde{w})$$
+![equation](https://latex.codecogs.com/png.latex?-%5Clog%20%5Csigma%28w%7B%27%7D_%7Bc%7D%5E%7BT%7D%20%5Ccdot%20%5Ctilde%7Bw%7D%29%20-%20%5Csum_%7Bk%3D1%7D%5E%7BK%7D%20%5Clog%20%5Csigma%28-%5Ctilde%7Bw%7B%27%7D%7D%5E%7BT%7D_%7Bk%7D%20%5Ccdot%20%5Ctilde%7Bw%7D%29)
 
 In the above formulation, $\{ \tilde{u}_{K}|k=1...K \}$ are sampled from $P_{n}(w)$. Let's discuss what $P_{n}(w)$ should be. While there is much discussion of what makes the best approximation, what seems to work best is the Unigram Model raised to the power of 3/4. Why 3/4? Here's an example that might help gain some intuition:
 
