@@ -27,7 +27,7 @@ The idea is to design a model whose parameters are the word vectors. Then, train
 
 &nbsp;&nbsp;A good language model will give this sentence a high probability because this is a completely valid sentence, syntactically and semantically. Similary, the sentence "stock boil fish is toy" should have a very low probability because it makes no sense. Mathematically, we can call this probability on any given sequence of *n* words:
 $$P(w_{1},w_{2},\cdots,w_{n}) $$
-![equation](https://latex.codecogs.com/gif.latex?P%28w_%7B1%7D%2Cw_%7B2%7D%2C%5Ccdots%2Cw_%7Bn%7D%29)
+![equation](https://latex.codecogs.com/png.latex?P%28w_%7B1%7D%2Cw_%7B2%7D%2C%5Ccdots%2Cw_%7Bn%7D%29)
 &nbsp;&nbsp;We can take the unary language model approach and break apart this probability by assuming the word occurences are completely independent:
 $$P(w_{1},w_{2},\cdots,w_{n}) = \prod_{i=1}^{n}P(w_{i})$$
 &nbsp;&nbsp;However, we know this is a bit ludicrous because we know the next word is highly contingent upon the previous sequence of words. And the silly sentence example might actually score highly. So perhaps we let the probability of the sequence depend on the pairwise probability of a word in the sequence and the word next to it. We call this the bigram model and represent it as:
