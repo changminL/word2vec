@@ -125,19 +125,22 @@ class SkipGram:
 
     def forward(self, index1, index2, W, W_prime):
         """
-        :param index1:
-        :param index2:
-        :param W:
-        :param W_prime:
-        :return: 
+		Implement feedforward!
+        :param index1: (int) : index of W matrix
+        :param index2: (int) : index of W_prime matrix
+        :param W: [vocab_dim, embedding_dim] (array)  : W matrix
+        :param W_prime: [vocab_dim, embedding_dim] (array) : W_prime matrix
+        :return: (double)
         """
         raise NotImplementedError
 
     def backward(self, ff, label):
         """
-        :param ff:
-        :param label:
-        :return:
+		Calculate gradients from a Negative Sampling objective function!
+		I give you some codes which handles saturation problems.
+        :param ff: (double) : the result from the feedforward
+        :param label: (int) : whether the word is positive or negative
+        :return: (double) : gradient
         """
         if ff > MAX_EXP:
             gradient = (label - 1) 
@@ -149,21 +152,26 @@ class SkipGram:
 
     def optimize(self, lr, gradients, W, W_prime):
         """
-        :param lr:
-        :param gradients:
-        :param W:
-        :param W_prime:
+		Implement SGD algorithm!
+		You should update the value of W and W_prime matrix!
+        :param lr: (double) : learning rate
+        :param gradients: (array) : array of (gradient, center index, context index) triples
+        :param W: [vocab_dim, embedding_dim] (array) : W matrix
+        :param W_prime: [vocab_dim, embedding_dim] (array) : W_prime matrix
         There's no return
         """
         raise NotImplementedError
             
     def subsampling(self, sample_bound, sentence):
         """
-        :param sample_bound:
-        :param sentence:
+		Implement subsampling!
+		Input sentence is a naive string!
+		You should do some works to split a sentence in a array of words
+        :param sample_bound: (double): scale something check reference file!
+        :param sentence: (string) 
         :return ret, w_cnt
-        - ret
-        - w_cnt
+        - ret: [word_num] (array) : a subsampled sentence
+        - w_cnt: (int) :number of words in a subsampled sentence
         """
         raise NotImplementedError
                              
