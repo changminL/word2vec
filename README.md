@@ -29,9 +29,10 @@ The idea is to design a model whose parameters are the word vectors. Then, train
 ![equation](https://latex.codecogs.com/png.latex?P%28w_%7B1%7D%2Cw_%7B2%7D%2C%5Ccdots%2Cw_%7Bn%7D%29)
 &nbsp;&nbsp;We can take the unary language model approach and break apart this probability by assuming the word occurences are completely independent:
 ![equation](https://latex.codecogs.com/png.latex?P%28w_%7B1%7D%2Cw_%7B2%7D%2C%5Ccdots%2Cw_%7Bn%7D%29%20%3D%20%5Cprod_%7Bi%3D1%7D%5E%7Bn%7DP%28w_%7Bi%7D%29)
-$$P(w_{1},w_{2},\cdots,w_{n}) = \prod_{i=1}^{n}P(w_{i})$$
+
 &nbsp;&nbsp;However, we know this is a bit ludicrous because we know the next word is highly contingent upon the previous sequence of words. And the silly sentence example might actually score highly. So perhaps we let the probability of the sequence depend on the pairwise probability of a word in the sequence and the word next to it. We call this the bigram model and represent it as:
-$$P(w_{1},w_{2},\cdots,w_{n})=\prod_{i=2}^{n}P(w_{i}|w_{i-1})$$
+![equation](https://latex.codecogs.com/png.latex?P%28w_%7B1%7D%2Cw_%7B2%7D%2C%5Ccdots%2Cw_%7Bn%7D%29%3D%5Cprod_%7Bi%3D2%7D%5E%7Bn%7DP%28w_%7Bi%7D%7Cw_%7Bi-1%7D%29)
+
 &nbsp;&nbsp;Again this is certainly a bit naive since we are only concerning ourselves with pairs of neighboring words rather than evaluating a whole sentence, but as we will see, this representation gets us pretty far long. Note in the Word-Word Matrix with context of size 1, we basically can learn these pairwise probabilities. But again, this would require computing and storing global information about a massive dataset.
 
 &nbsp;&nbsp;Now that we understand how we can think about a sequence of tokens having a probability, let us observe some example models that could learn these probabilities
@@ -40,7 +41,7 @@ $$P(w_{1},w_{2},\cdots,w_{n})=\prod_{i=2}^{n}P(w_{i}|w_{i-1})$$
 
 &nbsp;&nbsp;One approach is to treat {"The", "cat", "over", "the", "puddle"} as a context and from these words, be able to predict or generate the center word "jumped". This type of model we call a Continuous Bag of Words (CBOW) Model.
 
-&nbsp;&nbsp;Let's discuss the CBOW Model above in greater detail. First, we set up our known parameters. Let the known parameters in our model be the sentence represented by one-hot word vectors. The input one hot vectors or context we will represent with an $x^{(c)}$. And the output as $y^{(c)}$ and in the CBOW model, since we only have one output, so we just call this $y$ which is the one hot vector of the known center word. Now, let's define our unknowns in our model.
+&nbsp;&nbsp;Let's discuss the CBOW Model above in greater detail. First, we set up our known parameters. Let the known parameters in our model be the sentence represented by one-hot word vectors. The input one hot vectors or context we will represent with an ![equation](https://latex.codecogs.com/gif.latex?x%5E%7B%28c%29%7D). And the output as ![equation](src="https://latex.codecogs.com/gif.latex?y%5E%7B%28c%29%7D") and in the CBOW model, since we only have one output, so we just call this $y$ which is the one hot vector of the known center word. Now, let's define our unknowns in our model.
 
 &nbsp;&nbsp;We create two matrices, $W \in \mathbb{R}^{n\times|V|}$ and $W' \in \mathbb{R}^{|V|\times n}$. Where $n$ is an arbitrary size which defines the size of our embedding space. $W$ is the input word matrix such that the *i*-th column of $W$ is the n-dimensional embedded vector for word $w_{i}$ when it is an input to this model. We denote this $n \times 1$ vector as $v_{i}$. Similary, $W{'}$ is the output word matrix. The *j*-th row of $W'$ is an *n*-dimensional embedded vector for word $w_{j}$ when it is an output of the model. We denote this row of $W{'}$ as $w{'}_{j}$. Note that we do in fact learn two vectors for every word $word_{i}$ (i.e. input word vector $w_{i}$ and output word vector $w'_{i}$).
 
