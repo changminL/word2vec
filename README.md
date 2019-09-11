@@ -41,9 +41,9 @@ The idea is to design a model whose parameters are the word vectors. Then, train
 
 &nbsp;&nbsp;One approach is to treat {"The", "cat", "over", "the", "puddle"} as a context and from these words, be able to predict or generate the center word "jumped". This type of model we call a Continuous Bag of Words (CBOW) Model.
 
-&nbsp;&nbsp;Let's discuss the CBOW Model above in greater detail. First, we set up our known parameters. Let the known parameters in our model be the sentence represented by one-hot word vectors. The input one hot vectors or context we will represent with an ![equation](https://latex.codecogs.com/gif.latex?x%5E%7B%28c%29%7D). And the output as ![equation](https://latex.codecogs.com/gif.latex?y%5E%7B%28c%29%7D) and in the CBOW model, since we only have one output, so we just call this $y$ which is the one hot vector of the known center word. Now, let's define our unknowns in our model.
+&nbsp;&nbsp;Let's discuss the CBOW Model above in greater detail. First, we set up our known parameters. Let the known parameters in our model be the sentence represented by one-hot word vectors. The input one hot vectors or context we will represent with an ![equation](https://latex.codecogs.com/gif.latex?x%5E%7B%28c%29%7D). And the output as ![equation](https://latex.codecogs.com/gif.latex?y%5E%7B%28c%29%7D) and in the CBOW model, since we only have one output, so we just call this ![equation](https://latex.codecogs.com/gif.latex?y) which is the one hot vector of the known center word. Now, let's define our unknowns in our model.
 
-&nbsp;&nbsp;We create two matrices, $W \in \mathbb{R}^{n\times|V|}$ and $W' \in \mathbb{R}^{|V|\times n}$. Where $n$ is an arbitrary size which defines the size of our embedding space. $W$ is the input word matrix such that the *i*-th column of $W$ is the n-dimensional embedded vector for word $w_{i}$ when it is an input to this model. We denote this $n \times 1$ vector as $v_{i}$. Similary, $W{'}$ is the output word matrix. The *j*-th row of $W'$ is an *n*-dimensional embedded vector for word $w_{j}$ when it is an output of the model. We denote this row of $W{'}$ as $w{'}_{j}$. Note that we do in fact learn two vectors for every word $word_{i}$ (i.e. input word vector $w_{i}$ and output word vector $w'_{i}$).
+&nbsp;&nbsp;We create two matrices, ![eq](https://latex.codecogs.com/gif.latex?W%20%5Cin%20%5Cmathbb%7BR%7D%5E%7Bn%5Ctimes%7CV%7C%7D%24%20and%20%24W%27%20%5Cin%20%5Cmathbb%7BR%7D%5E%7B%7CV%7C%5Ctimes%20n%7D). Where ![eq](https://latex.codecogs.com/gif.latex?n) is an arbitrary size which defines the size of our embedding space. ![eq](https://latex.codecogs.com/gif.latex?W) is the input word matrix such that the *i*-th column of ![eq](https://latex.codecogs.com/gif.latex?W) is the n-dimensional embedded vector for word ![eq](https://latex.codecogs.com/gif.latex?w_%7Bi%7D) when it is an input to this model. We denote this ![eq](https://latex.codecogs.com/gif.latex?n%20%5Ctimes%201) vector as ![eq](https://latex.codecogs.com/gif.latex?v_%7Bi%7D). Similary, ![eq](https://latex.codecogs.com/gif.latex?W%7B%27%7D) is the output word matrix. The *j*-th row of ![eq](https://latex.codecogs.com/gif.latex?W%7B%27%7D) is an *n*-dimensional embedded vector for word $w_{j}$ when it is an output of the model. We denote this row of ![eq](https://latex.codecogs.com/gif.latex?W%7B%27%7D) as $w{'}_{j}$. Note that we do in fact learn two vectors for every word $word_{i}$ (i.e. input word vector $w_{i}$ and output word vector $w'_{i}$).
 
 ![CBOW](./image/CBOW.png)
 [image source from Lilian Weng's blog](https://lilianweng.github.io/lil-log/2017/10/15/learning-word-embedding.html "Lilian Weng")
@@ -60,10 +60,10 @@ $m:(x^{(c-m)},...,x^{(c-1)},x^{(c+1)},...,x{(c+m)} \in \mathbb{R}^{|V|})$.
 &nbsp;&nbsp;So now that we have an understanding of how our model would work if we had a W and W', how would we learn these two matrices? Well, we need to create an objective function. Very often when we are trying to learn a probability from some true probability, we look to information theory to give us a measure of the distance between two distributions. Here, we use a popular choice of distance/loss measure, corss entropy $H(\hat{y},y)$.
 
 &nbsp;&nbsp;The intuition for the use of cross-entropy in the discrete case can be derived from the formulation of the loss funciton:
-$$H(\hat{y},y) = - \sum_{j=1}^{|V|}y_{i}\log(\hat{y_{j}})$$
+![eq](https://latex.codecogs.com/gif.latex?H%28%5Chat%7By%7D%2Cy%29%20%3D%20-%20%5Csum_%7Bj%3D1%7D%5E%7B%7CV%7C%7Dy_%7Bi%7D%5Clog%28%5Chat%7By_%7Bj%7D%7D%29)
 
 &nbsp;&nbsp;Let us concern ourselves with the case at hand, which is that $y$ is a one-hot vector. Thus we know that the above loss simplifies to simply:
-$$H(\hat{y},y) = - y_{i}log(\hat{y_{j}})$$
+![eq](https://latex.codecogs.com/gif.latex?H%28%5Chat%7By%7D%2Cy%29%20%3D%20-%20y_%7Bi%7Dlog%28%5Chat%7By_%7Bj%7D%7D%29)
 
 &nbsp;&nbsp;In this formulation, $c$ is the index where the correct word's one hot vector is 1. We can now consider the case where our prediction was perfect and thus $\hat{y_{c}} = 1$. We can then calculate $H(\hat{y},y) = -1log(1) = 0$. Thus,for a perfect prediction, we face no penalty or loss. Now let us consider the opposite case where our prediction was very bad and thus $\hat{y_{c}} = 0.01$. As before, we can calculate our loss to be $H(\hat{y},y) = -1log(0.01) \approx 4.605$. We can thus see that for probability distributions, cross entropy provides us with a good measure of distance. We thus formulate our optimization objective as: 
 
@@ -93,8 +93,8 @@ $$H(\hat{y},y) = - y_{i}log(\hat{y_{j}})$$
 &nbsp;&nbsp;With this objective function, we can compute the gradients with respect to the unknown parameters and at each iteration update them via Stochastic Gradient Descent.
 
 &nbsp;&nbsp;Note that
-$$J = - \sum_{j=0,j \neq m}^{2m} \log P(w{'}_{c-m+j}|w_{c})$$
-$$= \sum_{j=0, j \neq m}^{2m} H(\hat{y}, y_{c-m+j})$$
+![eq](https://latex.codecogs.com/gif.latex?J%20%3D%20-%20%5Csum_%7Bj%3D0%2Cj%20%5Cneq%20m%7D%5E%7B2m%7D%20%5Clog%20P%28w%7B%27%7D_%7Bc-m&plus;j%7D%7Cw_%7Bc%7D%29)
+![eq](https://latex.codecogs.com/gif.latex?%3D%20%5Csum_%7Bj%3D0%2C%20j%20%5Cneq%20m%7D%5E%7B2m%7D%20H%28%5Chat%7By%7D%2C%20y_%7Bc-m&plus;j%7D%29)
 
 &nbsp;&nbsp;where $H(\hat{y},y_{c-m+j})$ is the cross-entropy between the probability vector $\hat{y}$ and one-hot vector $y_{c-m+j}$ 
 
@@ -108,7 +108,7 @@ Lets take a second to look at objective function. Note that the summation over $
 * update rules
 
 [**MIKOLOV ET AL.**](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) present **Negative Sampling** in DISTRIBUTED REPRESENTATIONS OF WORDS AND PHRASES AND THEIR COMPOSITIONALITY. While negative sampling is based on Skip-Gram model, it is infact optimizing a different objective. Consider a pair $(w,c)$ of word and context. Did this pair come from the training data? Let's denote by $P(D=1|w,c)$ the probability that $(w,c)$ came from the corpus data. Correspondingly, $P(D=0|w,c)$ will be the probability that $(w,c)$ did not come from the corpus data. First, let's model $P(D=1|w,c)$ with the sigmoid function:
-$$P(D=1|w,c,\theta) = \sigma(w_{c}^{T}w_{w}) = \frac{1}{1 + e^{(-w_{c}^{T}w_{w})}}$$
+![eq](https://latex.codecogs.com/gif.latex?P%28D%3D1%7Cw%2Cc%2C%5Ctheta%29%20%3D%20%5Csigma%28w_%7Bc%7D%5E%7BT%7Dw_%7Bw%7D%29%20%3D%20%5Cfrac%7B1%7D%7B1%20&plus;%20e%5E%7B%28-w_%7Bc%7D%5E%7BT%7Dw_%7Bw%7D%29%7D%7D)
 
 &nbsp;&nbsp;Now, we build a new objective function that tries to maximize the probability of a word and context being in the corpus data if it indeed is, and maximize the probability of a word and context not being in the corpus data if it indeed is not. We take a simple maximum likelihood approach of these two probabilities. (Here we take $\theta$ to be the parameters of the model, and in our case it is $W$ and $W{'}$.)
 
