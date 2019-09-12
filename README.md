@@ -129,5 +129,7 @@ For CBOW, our new objective function for observing the center word ![eq](https:/
 In the above formulation, ![eq](https://latex.codecogs.com/gif.latex?%5C%7B%20%5Ctilde%7Bu%7D_%7BK%7D%7Ck%3D1...K%20%5C%7D) are sampled from ![eq](https://latex.codecogs.com/gif.latex?P_%7Bn%7D%28w%29). Let's discuss what ![eq](https://latex.codecogs.com/gif.latex?P_%7Bn%7D%28w%29) should be. While there is much discussion of what makes the best approximation, what seems to work best is the Unigram Model raised to the power of 3/4. Why 3/4? Here's an example that might help gain some intuition:
 
 ![eq](https://latex.codecogs.com/gif.latex?is%3A%200.9%5E%7B3/4%7D%20%3D%200.92)
+
 ![eq](https://latex.codecogs.com/gif.latex?Constitution%3A%200.09%5E%7B3/4%7D%20%3D%200.16)
+
 ![eq](https://latex.codecogs.com/gif.latex?bombastic%3A%200.01%5E%7B3/4%7D%20%3D%200.032)
