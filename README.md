@@ -3,7 +3,7 @@
 &nbsp;&nbsp;In this notebook, I'll lead you through using Numpy to implement the word2vec algorithm using the skip-gram architecture. By implementing this, you'll learn about embedding words for use in natural language processing. This will come in handy when dealing with things like machine translation.
 
 ## Readings (reference)
-&nbsp;&nbsp;Here are the resources I used to build this notebook. I suggest reading these either beforehand or while your're working on this material.
+&nbsp;&nbsp;Here are the resources I used to build this material. I suggest reading these either beforehand or while your're working on this material.
 
 [1] Francois Chaubard, Michael Fang, Guillaume Genthial, Rohit Mundra, Richard Socher, Winter 2019, CS224n: Natural Language Processing with Deep Learning 1 Lecture Notes: Part I Word Vectors I: Introduction, SVD and Word2Vec  
 [2] Lilian Weng, (2017) 'Learning Word Embedding', *Github*, 15 Oct. Available at:https://lilianweng.github.io/lil-log/2017/10/15/learning-word-embedding.html
