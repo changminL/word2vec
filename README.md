@@ -131,5 +131,3 @@ In the above formulation, ![eq](https://latex.codecogs.com/gif.latex?%5C%7B%20%5
 ![eq](https://latex.codecogs.com/gif.latex?is%3A%200.9%5E%7B3/4%7D%20%3D%200.92)
 ![eq](https://latex.codecogs.com/gif.latex?Constitution%3A%200.09%5E%7B3/4%7D%20%3D%200.16)
 ![eq](https://latex.codecogs.com/gif.latex?bombastic%3A%200.01%5E%7B3/4%7D%20%3D%200.032)
-
-"Bombastic" is now 3x more likely to be sampled while "is" only went up marginally.
